@@ -53,29 +53,35 @@ CREATE TABLE location (
 CREATE TABLE festival (
     year YEAR PRIMARY KEY,
     name VARCHAR(50) GENERATED ALWAYS AS (CONCAT('Pulse University Festival ', year)) STORED,
-    location_id INT NOT NULL,
     start_date DATE NOT NULL,
     duration INT NOT NULL CHECK (duration > 0),
     end_date DATE GENERATED ALWAYS AS (DATE_ADD(start_date, INTERVAL duration - 1 DAY)) STORED,
     image VARCHAR(100),
     description TEXT,
+    -- FK
+    location_id INT NOT NULL,
     FOREIGN KEY (location_id) REFERENCES location(location_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    INDEX idx_fest_location (location_id)
+    -- Indexes
+    INDEX idx_fest_location (location_id),
+    INDEX idx_fest_loc (year, location_id)
 );
 
 CREATE TABLE stage (
     stage_id INT,
     year YEAR NOT NULL,
+    PRIMARY KEY (stage_id, year),
     name VARCHAR(100) NOT NULL,
     capacity INT NOT NULL CHECK (capacity > 0),
     location_id INT NOT NULL,
     image VARCHAR(100),
     description TEXT,
-    PRIMARY KEY (stage_id, year),
+    -- FK
     FOREIGN KEY (year) REFERENCES festival(year),
-    KEY idx_stage_festival (year),
     FOREIGN KEY (location_id) REFERENCES location(location_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_stage_location (location_id)
+    -- Indexes
+    KEY idx_stage_festival (year),
+    KEY idx_stage_location (location_id),
+    INDEX idx_stage_capacity (stage_id, year, capacity)
 );
 
 CREATE TABLE equipment (
@@ -89,13 +95,15 @@ CREATE TABLE stage_equipment (
     stage_id INT  NOT NULL,
     year YEAR NOT NULL,
     equipment_id INT NOT NULL,
-    quantity INT NOT NULL CHECK (quantity >= 0),
     PRIMARY KEY (stage_id, year, equipment_id),
+    quantity INT NOT NULL CHECK (quantity >= 0),
+    -- FK
     FOREIGN KEY (year) REFERENCES festival(year),
-    KEY idx_steq_festival (year),
     FOREIGN KEY (stage_id, year) REFERENCES stage(stage_id, year),
-    KEY idx_steq_stage (stage_id, year),
     FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- Indexes
+    KEY idx_steq_festival (year),
+    KEY idx_steq_stage (stage_id, year),
     KEY idx_steq_equipment (equipment_id)
 );
 
@@ -110,12 +118,16 @@ CREATE TABLE event (
     num_of_perf INT NOT NULL CHECK (num_of_perf > 0),
     image VARCHAR(100),
     description TEXT,
-    FOREIGN KEY (year) REFERENCES festival(year) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_event_festival (year),
-    FOREIGN KEY (stage_id, year) REFERENCES stage(stage_id, year),
-    KEY idx_event_stage (stage_id, year),
     UNIQUE (year, stage_id, festival_day),
-    INDEX idx_event_year_day_stage (year, festival_day, stage_id)
+    -- FK
+    FOREIGN KEY (year) REFERENCES festival(year) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (stage_id, year) REFERENCES stage(stage_id, year),
+    -- Indexes
+    KEY idx_ev_year (year),
+    KEY idx_event_stage (stage_id, year),
+    INDEX idx_event_year (event_id, year),
+    INDEX idx_event_date (event_id, date),
+    INDEX idx_event_day_stage (year, date, stage_id)
 );
 
 CREATE TABLE performance_type (
@@ -141,16 +153,19 @@ CREATE TABLE performance (
     start_time DATETIME NOT NULL,
     duration INT NOT NULL CHECK (duration <= 180),
     end_time DATETIME GENERATED ALWAYS AS (DATE_ADD(start_time, INTERVAL duration MINUTE)) STORED,
-    FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_perf_event (event_id),
-    FOREIGN KEY (performer_id) REFERENCES performer(performer_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_perf_performer (performer_id),
-    FOREIGN KEY (type_id) REFERENCES performance_type(type_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_perf_type (type_id),
-    INDEX idx_performer_event (performer_id, event_id),
-    INDEX idx_perf_type_event_perrformer (type_id, event_id, performer_id),
     UNIQUE (event_id, event_order),
-    UNIQUE (event_id, performer_id)
+    UNIQUE (event_id, performer_id),
+    -- FK
+    FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (performer_id) REFERENCES performer(performer_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY (type_id) REFERENCES performance_type(type_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    -- Indexes
+    KEY idx_perf_event (event_id),
+    KEY idx_perf_performer (performer_id),
+    KEY idx_perf_type (type_id),
+    INDEX idx_perf_performer_event (performer_id, event_id),
+    INDEX idx_performance_performer (performer_id, performance_id),
+    INDEX idx_perf_type_event_perrformer (type_id, event_id, performer_id)
 );
 
 CREATE TABLE staff_role (
@@ -172,9 +187,11 @@ CREATE TABLE staff (
     role_id INT NOT NULL,
     level_id INT NOT NULL,
     is_assigned BOOLEAN DEFAULT FALSE,
+    -- FK
     FOREIGN KEY (role_id) REFERENCES staff_role(role_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_staff_role (role_id),
     FOREIGN KEY (level_id) REFERENCES experience_level(level_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    -- Indexes
+    KEY idx_staff_role (role_id),
     KEY idx_staff_exp (level_id)
 );
 
@@ -182,9 +199,11 @@ CREATE TABLE event_staff (
     event_id INT NOT NULL,
     staff_id INT NOT NULL,
     PRIMARY KEY (event_id, staff_id),
+    -- FK
     FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_event_staff_event (event_id),
     FOREIGN KEY (staff_id) REFERENCES staff(staff_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- Indexes
+    KEY idx_event_staff_event (event_id),
     KEY idx_event_staff_staff (staff_id)
 );
 
@@ -193,7 +212,9 @@ CREATE TABLE artist (
     stage_name VARCHAR(100),
     birth_date DATE NOT NULL,
     age INT,
+    -- FK
     FOREIGN KEY (performer_id) REFERENCES performer(performer_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- Indexes
     KEY idx_artist_performer (performer_id),
     INDEX idx_artist_age (age)
 );
@@ -210,9 +231,11 @@ CREATE TABLE artist_band (
     artist_id INT NOT NULL,
     band_id INT NOT NULL,
     PRIMARY KEY (artist_id, band_id),
+    -- FK
     FOREIGN KEY (artist_id) REFERENCES artist(performer_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_artist_band_artist (artist_id),
     FOREIGN KEY (band_id) REFERENCES band(performer_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- Indexes
+    KEY idx_artist_band_artist (artist_id),
     KEY idx_artist_band_band (band_id)
 );
 
@@ -220,7 +243,9 @@ CREATE TABLE genre (
     genre_id INT  AUTO_INCREMENT PRIMARY KEY,
     genre_name VARCHAR(50) NOT NULL,
     parent_genre_id INT,
+    -- FK
     FOREIGN KEY (parent_genre_id) REFERENCES genre(genre_id) ON DELETE SET NULL ON UPDATE CASCADE,
+    -- Indexes
     KEY idx_genre_parent_genre (parent_genre_id),
     INDEX idx_genre_name (genre_name)
 );
@@ -229,10 +254,12 @@ CREATE TABLE performer_genre (
     performer_id INT NOT NULL,
     genre_id INT NOT NULL,
     PRIMARY KEY (performer_id, genre_id),
+    -- FK
     FOREIGN KEY (performer_id) REFERENCES performer(performer_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_performer_genre_performer (performer_id),
     FOREIGN KEY (genre_id) REFERENCES genre(genre_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_performer_genre_genre (genre_id)
+    -- Indexes
+    KEY idx_pg_performer (performer_id),
+    KEY idx_pg_genre (genre_id)
 );
 
 CREATE TABLE visitor (
@@ -270,16 +297,19 @@ CREATE TABLE ticket (
     ean_code VARCHAR(20) NOT NULL UNIQUE,
     CHECK (ean_code REGEXP '^[0-9]{13}$'),
     is_activated BOOLEAN DEFAULT FALSE,
+    UNIQUE (visitor_id, event_id),
+    -- FK
     FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_ticket_event (event_id),
     FOREIGN KEY (visitor_id) REFERENCES visitor(visitor_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_ticket_visitor (visitor_id),
     FOREIGN KEY (category_id) REFERENCES ticket_category(category_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_ticket_category (category_id),
     FOREIGN KEY (payment_method_id) REFERENCES payment_method(method_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    -- Indexes
+    KEY idx_ticket_event (event_id),
+    KEY idx_ticket_visitor (visitor_id),
+    KEY idx_ticket_category (category_id),
     KEY idx_ticket_payment (payment_method_id),
-    INDEX idx_ticket_event_pm_price (event_id, payment_method_id, price_paid),
-    UNIQUE (visitor_id, event_id)
+    INDEX idx_tick_vis_ev (visitor_id, event_id, is_activated),
+    INDEX idx_ticket_event_pm_price (event_id, payment_method_id, price_paid)
 );
 
 CREATE TABLE ticket_pricing (
@@ -287,9 +317,11 @@ CREATE TABLE ticket_pricing (
     category_id INT NOT NULL,
     price DECIMAL(5,2) NOT NULL CHECK (price > 0),
     PRIMARY KEY (event_id, category_id),
+    -- FK
     FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_ticket_pricing_event (event_id),
     FOREIGN KEY (category_id) REFERENCES ticket_category(category_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- Indexes
+    KEY idx_ticket_pricing_event (event_id),
     KEY idx_ticket_pricing_category (category_id)
 );
 
@@ -300,11 +332,13 @@ CREATE TABLE resale_offer (
     visitor_id INT NOT NULL,
     offer_timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_available BOOLEAN DEFAULT TRUE,
+    UNIQUE (ticket_id),
+    -- FK
     FOREIGN KEY (ticket_id) REFERENCES ticket(ticket_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_resale_offer_ticket (ticket_id),
     FOREIGN KEY (visitor_id) REFERENCES visitor(visitor_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_resale_offer_visitor (visitor_id),
-    UNIQUE (ticket_id)
+    -- Indexes
+    KEY idx_resale_offer_ticket (ticket_id),
+    KEY idx_resale_offer_visitor (visitor_id)
 );
 
 CREATE TABLE resale_request (
@@ -321,15 +355,17 @@ CREATE TABLE resale_request (
     payment_method_id INT NOT NULL,
     request_timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_fulfilled BOOLEAN DEFAULT FALSE,
+    -- FK
     FOREIGN KEY (visitor_id) REFERENCES visitor(visitor_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_resale_request_visitor (visitor_id),
     FOREIGN KEY (offer_id) REFERENCES resale_offer(offer_id) ON DELETE SET NULL ON UPDATE CASCADE,
-    KEY idx_resale_request_offer (offer_id),
     FOREIGN KEY (event_id) REFERENCES event(event_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_resale_request_event (event_id),
     FOREIGN KEY (category_id) REFERENCES ticket_category(category_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_resale_request_category (category_id),
     FOREIGN KEY (payment_method_id) REFERENCES payment_method(method_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    -- Indexes
+    KEY idx_resale_request_visitor (visitor_id),
+    KEY idx_resale_request_offer (offer_id),
+    KEY idx_resale_request_event (event_id),
+    KEY idx_resale_request_category (category_id),
     KEY idx_resale_request_payment (payment_method_id)
 );
 
@@ -342,33 +378,36 @@ CREATE TABLE resale_transaction (
     is_complete BOOLEAN DEFAULT FALSE,
     seller_id INT NOT NULL,
     buyer_id INT NOT NULL,
+    UNIQUE (offer_id, request_id),
+    -- FK
     FOREIGN KEY (offer_id) REFERENCES resale_offer(offer_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_resale_transaction_offer (offer_id),
     FOREIGN KEY (request_id) REFERENCES resale_request(request_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_resale_transaction_request (request_id),
     FOREIGN KEY (seller_id) REFERENCES visitor(visitor_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_resale_transaction_seller (seller_id),
     FOREIGN KEY (buyer_id) REFERENCES visitor(visitor_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    KEY idx_resale_transaction_buyer (buyer_id),
-    UNIQUE (offer_id, request_id)
+    -- Indexes
+    KEY idx_resale_transaction_offer (offer_id),
+    KEY idx_resale_transaction_request (request_id),
+    KEY idx_resale_transaction_seller (seller_id),
+    KEY idx_resale_transaction_buyer (buyer_id)
 );
 
 CREATE TABLE rating (
     rating_id INT  AUTO_INCREMENT PRIMARY KEY,
     ticket_id INT NOT NULL,
     performance_id INT NOT NULL,
-    -- visitor_id INT NOT NULL,
-    score_performance TINYINT NOT NULL CHECK (score_performance BETWEEN 1 AND 7),
-    score_audio_visual TINYINT NOT NULL CHECK (score_audio_visual BETWEEN 1 AND 7),
-    score_stage_presence TINYINT NOT NULL CHECK (score_stage_presence BETWEEN 1 AND 7),
-    score_organization TINYINT NOT NULL CHECK (score_organization BETWEEN 1 AND 7),
-    score_overall TINYINT NOT NULL CHECK (score_overall BETWEEN 1 AND 7),
+    score_performance TINYINT NOT NULL CHECK (score_performance BETWEEN 1 AND 5),
+    score_audio_visual TINYINT NOT NULL CHECK (score_audio_visual BETWEEN 1 AND 5),
+    score_stage_presence TINYINT NOT NULL CHECK (score_stage_presence BETWEEN 1 AND 5),
+    score_organization TINYINT NOT NULL CHECK (score_organization BETWEEN 1 AND 5),
+    score_overall TINYINT NOT NULL CHECK (score_overall BETWEEN 1 AND 5),
+    UNIQUE (performance_id, ticket_id),
+    -- FK
     FOREIGN KEY (performance_id) REFERENCES performance(performance_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_rating_performance (performance_id),
     FOREIGN KEY (ticket_id) REFERENCES ticket(ticket_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    KEY idx_rating_ticket (ticket_id),
-    -- FOREIGN KEY (visitor_id) REFERENCES visitor(visitor_id),
-    UNIQUE (performance_id, ticket_id)
+    -- Indexes
+    KEY idx_rating_ticket_perf (ticket_id, performance_id),
+    KEY idx_rating_perf (performance_id),
+    KEY idx_rating_ticket (ticket_id)
 );
 
 SET FOREIGN_KEY_CHECKS = 1;
@@ -1041,3 +1080,82 @@ DO
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+-- ===============================================================================================
+--                                             Views
+-- ===============================================================================================
+CREATE VIEW band_full_info AS
+SELECT 
+    b.performer_id AS id,
+    bp.name AS band_name,
+    b.formation_year,
+    bp.description,
+    bp.image,
+    bp.site,
+    bp.instagram,
+    GROUP_CONCAT(ap.name ORDER BY ap.name SEPARATOR ', ') AS member_real_names
+FROM band b
+JOIN performer bp ON b.performer_id = bp.performer_id
+LEFT JOIN artist_band ab ON ab.band_id = b.performer_id
+LEFT JOIN artist a ON ab.artist_id = a.performer_id
+LEFT JOIN performer ap ON a.performer_id = ap.performer_id
+GROUP BY 
+    b.performer_id, 
+    bp.name, 
+    b.formation_year,
+    bp.description,
+    bp.image,
+    bp.site,
+    bp.instagram;
+
+-- ===========================================================
+CREATE VIEW performer_full_info AS
+SELECT 
+    p.performer_id AS artist_id,
+    p.name AS legal_name,
+    a.stage_name,
+    a.birth_date,
+    a.age,
+    p.image,
+    p.description,
+    p.site,
+    p.instagram
+FROM artist a
+JOIN performer p ON a.performer_id = p.performer_id;
+
+-- ===========================================================
+CREATE VIEW performance_schedule_view AS
+SELECT
+  p.performance_id,
+  p.event_id,
+  p.event_order,
+  pt.type_name AS performance_type,
+  pr.name AS performer_name,
+  p.start_time,
+  p.duration,
+  p.end_time
+FROM performance p
+JOIN performer pr ON p.performer_id = pr.performer_id
+JOIN performance_type pt ON p.type_id = pt.type_id
+ORDER BY p.event_id ,p.event_order;
+
+-- ===========================================================
+CREATE VIEW ticket_details_view AS
+SELECT
+  t.ticket_id,
+  t.event_id,
+  e.start_time,
+  e.end_time,
+  tc.category_name,
+  v.visitor_id,  
+  v.first_name,
+  v.last_name,
+  v.email,
+  t.purchase_timestamp,
+  t.price_paid,
+  t.is_activated
+FROM ticket t
+JOIN visitor v ON t.visitor_id = v.visitor_id
+JOIN ticket_category tc ON t.category_id = tc.category_id
+JOIN event e ON t.event_id = e.event_id
+ORDER BY ticket_id;

@@ -711,12 +711,12 @@ INSERT INTO performer (performer_id, name, image, description, site, instagram) 
 (35, 'Joelle Joanie Siwa', 'https://picsum.photos/200/300', 'American singer and dancer.', 'https://www.siwaj.com/', '@itsjojosiwa'),
 (36, 'Marshall Bruce Mathers III', 'https://picsum.photos/200/300', 'American rapper and songwriter.', 'https://www.eminem.com/', '@eminem'),
 
-(37, 'Stone Sour', 'https://picsum.photos/200/300', 'American rock band formed in 1992.', NULL, '@stonesour'),
-(38, 'BTS', 'https://picsum.photos/200/300', 'South Korean K-pop band', NULL, '@bts.bighitofficial'),
-(39, 'Daft Punk', 'https://picsum.photos/200/300', 'French electronic music duo.', NULL, '@daftpunk'),
-(40, 'Metallica', 'https://picsum.photos/200/300', 'American heavy thrash band.', NULL, '@metallica'),
-(41, 'Megadeth', 'https://picsum.photos/200/300', 'American heavy thrash band.', NULL, '@megadeth'),
-(42, 'Coldplay', 'https://picsum.photos/200/300', 'British rock band.', NULL, '@coldplay'),
+(37, 'Stone Sour', 'https://picsum.photos/200/300', 'American rock band formed in 1992.', 'https://www.stonesour.com/', '@stonesour'),
+(38, 'BTS', 'https://picsum.photos/200/300', 'South Korean K-pop band', 'https://ibighit.com/bts/eng/', '@bts.bighitofficial'),
+(39, 'Daft Punk', 'https://picsum.photos/200/300', 'French electronic music duo.', 'https://www.daftpunk.com/', '@daftpunk'),
+(40, 'Metallica', 'https://picsum.photos/200/300', 'American heavy thrash band.', 'https://www.metallica.com/', '@metallica'),
+(41, 'Megadeth', 'https://picsum.photos/200/300', 'American heavy thrash band.', 'https://www.megadeth.com/', '@megadeth'),
+(42, 'Coldplay', 'https://picsum.photos/200/300', 'British rock band.', 'https://www.coldplay.com/', '@coldplay'),
 (43, 'Nickelodeon', 'https://picsum.photos/200/300', 'Nickelodeon ex actresses', NULL, NULL),
 (44, 'NPC Music', 'https://picsum.photos/200/300', 'NPC Music', NULL, NULL),
 (45, 'One Direction', 'https://picsum.photos/200/300', 'British pop band.', NULL, '@onedirection'),
@@ -748,7 +748,7 @@ INSERT INTO artist (performer_id, stage_name, birth_date) VALUES
 (17, 'Rihanna', '1988-02-20'),
 (18, NULL, '1993-06-26'),
 (19, NULL, '1974-01-03'),
-(20, NULL, '1974-03-08'),
+(20, 'Guy-Manuel', '1974-03-08'),
 (21, 'Avicii', '1989-09-08'),
 (22, 'Beyoncé', '1981-09-04'),
 (23, 'Ye', '1977-06-08'),
@@ -884,7 +884,9 @@ INSERT INTO performer_genre (performer_id, genre_id) VALUES (48, 4);
 INSERT INTO performer_genre (performer_id, genre_id) VALUES (49, 22);
 INSERT INTO performer_genre (performer_id, genre_id) VALUES (50, 19);
 INSERT INTO performer_genre (performer_id, genre_id) VALUES (50, 7);
--- Add parent genres
+
+-- Inherit parent genres (not realistic, just an option)
+/*
 INSERT INTO performer_genre (performer_id, genre_id)
 SELECT DISTINCT pg.performer_id, g.parent_genre_id
 FROM performer_genre pg
@@ -892,7 +894,7 @@ JOIN genre g ON g.genre_id = pg.genre_id
 LEFT JOIN performer_genre existing
   ON existing.performer_id = pg.performer_id AND existing.genre_id = g.parent_genre_id
 WHERE g.parent_genre_id IS NOT NULL AND existing.performer_id IS NULL;
-
+*/
 
 INSERT INTO stage_equipment (stage_id, year, equipment_id, quantity) VALUES 
 (1, 2018, 10, 4),
@@ -1167,12 +1169,12 @@ INSERT INTO performance (event_id, performer_id, type_id, event_order, start_tim
 -- 2018
 (1, 10, 1, 1, '2018-07-23 19:00:00', 60),
 (1, 38, 2, 2, '2018-07-23 20:15:00', 90),
-(1, 43, 3, 3, '2018-07-23 22:00:00', 90),
+(1, 41, 3, 3, '2018-07-23 22:00:00', 90),
 
 (2, 8, 1, 1, '2018-07-23 15:45:00', 60),
 (2, 7, 3, 2, '2018-07-23 17:00:00', 110),
 
-(3, 17, 1, 1, '2018-07-24 19:00:00', 60),
+(3, 21, 1, 1, '2018-07-24 19:00:00', 60),
 (3, 35, 2, 2, '2018-07-24 20:15:00', 60),
 (3, 3, 3, 3, '2018-07-24 21:30:00', 90),
 
@@ -1183,7 +1185,7 @@ INSERT INTO performance (event_id, performer_id, type_id, event_order, start_tim
 (5, 42, 2, 2, '2019-06-15 19:15:00', 90),
 (5, 27, 3, 3, '2019-06-15 21:00:00', 120),
 
-(6, 33, 1, 1, '2019-06-15 17:00:00', 60),
+(6, 37, 1, 1, '2019-06-15 17:00:00', 60),
 (6, 13, 3, 2, '2019-06-15 18:30:00', 150),
 
 (7, 6, 4, 1, '2019-06-16 18:30:00', 90),
@@ -1210,7 +1212,7 @@ INSERT INTO performance (event_id, performer_id, type_id, event_order, start_tim
 (13, 36, 3, 2, '2020-08-11 20:30:00', 150),
 
 -- 2021
-(14, 50, 1, 1, '2021-07-01 17:00:00', 120),
+(14, 47, 1, 1, '2021-07-01 17:00:00', 120),
 (14, 12, 3, 3, '2021-07-01 19:30:00', 180),
 
 (15, 32, 4, 1, '2021-07-01 15:00:00', 60),
@@ -1227,7 +1229,7 @@ INSERT INTO performance (event_id, performer_id, type_id, event_order, start_tim
 (19, 27, 2, 2, '2021-07-03 18:45:00', 90),
 (19, 3, 3, 3, '2021-07-03 20:30:00', 180),
 
-(20, 50, 1, 1, '2021-07-03 20:00:00', 60),
+(20, 47, 1, 1, '2021-07-03 20:00:00', 60),
 (20, 17, 3, 2, '2021-07-03 21:30:00', 90),
 
 -- 2022
@@ -1255,7 +1257,7 @@ INSERT INTO performance (event_id, performer_id, type_id, event_order, start_tim
 (27, 47, 1, 1, '2023-08-16 17:00:00', 180),
 (27, 20, 3, 2, '2023-08-16 20:30:00', 180), 
 
-(28, 9, 3, 1, '2023-08-16 15:00:00', 150),
+(28, 50, 3, 1, '2023-08-16 15:00:00', 150),
 
 -- 2024
 (29, 33, 1, 1, '2024-07-01 17:00:00', 90),
@@ -1304,13 +1306,13 @@ INSERT INTO performance (event_id, performer_id, type_id, event_order, start_tim
 (44, 30, 4, 1, '2026-06-02 19:00:00', 120),
 
 -- 2027
-(45, 47, 1, 1, '2027-07-01 19:00:00', 120),
+(45, 50, 1, 1, '2027-07-01 19:00:00', 120),
 (45, 49, 3, 2, '2027-07-01 21:30:00', 120),
 
 (46, 45, 1, 1, '2027-07-01 20:00:00', 60),
 (46, 16, 3, 2, '2027-07-01 21:30:00', 120),
 
-(47, 38, 1, 1, '2027-07-02 19:00:00', 60),
+(47, 50, 1, 1, '2027-07-02 19:00:00', 60),
 (47, 40, 2, 2, '2027-07-02 20:15:00', 90),
 (47, 44, 3, 3, '2027-07-02 22:00:00', 90),
 
@@ -1328,7 +1330,20 @@ INSERT INTO performance (event_id, performer_id, type_id, event_order, start_tim
 (52, 42, 3, 2, '2027-07-03 22:00:00', 90);
 
 
+-- Staff Assignment (event_staff)
+CALL assign_staff_for_festival(2018);
+CALL assign_staff_for_festival(2019);
+CALL assign_staff_for_festival(2020);
+CALL assign_staff_for_festival(2021);
+CALL assign_staff_for_festival(2022);
+CALL assign_staff_for_festival(2023);
+CALL assign_staff_for_festival(2024);
+CALL assign_staff_for_festival(2025);
+CALL assign_staff_for_festival(2026);
+CALL assign_staff_for_festival(2027);
 
+
+-- Ticket Pricing
 INSERT INTO ticket_pricing (event_id, category_id, price) VALUES
 -- 2018
 (1, 1, 100.00), (1, 2, 70.00), (1, 3, 60.00),
@@ -1934,7 +1949,7 @@ INSERT INTO rating (ticket_id, performance_id, score_performance, score_audio_vi
 (73, 56, 4, 4, 5, 4, 2),
 (74, 56, 5, 3, 4, 3, 4),
 (75, 56, 3, 4, 3, 1, 2),
-(76, 56, 5, 4, 4, 1, 3),
+(76, 56, 5, 4, 4, 5, 5),
 (78, 56, 5, 5, 4, 5, 3),
 (79, 56, 3, 5, 4, 4, 5),
 (80, 56, 2, 4, 1, 4, 4),
